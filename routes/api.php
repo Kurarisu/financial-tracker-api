@@ -6,6 +6,7 @@ use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\CategoryController;
 use App\Http\Controllers\Api\DashboardController;
 use App\Http\Controllers\Api\ReportController;
+use App\Http\Controllers\Api\ReceiptController;
 use App\Http\Controllers\Api\TaskController;
 use App\Http\Controllers\Api\TransactionController;
 use Illuminate\Http\Request;
@@ -26,6 +27,8 @@ Route::post('/auth/login', [AuthController::class, 'login']);
 
 Route::middleware(['auth:sanctum', 'activity.log'])->group(function () {
     Route::get('/auth/me', [AuthController::class, 'me']);
+    Route::patch('/auth/me', [AuthController::class, 'updateProfile']);
+    Route::put('/auth/password', [AuthController::class, 'updatePassword']);
     Route::post('/auth/logout', [AuthController::class, 'logout']);
     Route::get('/activity-logs', [ActivityLogController::class, 'index']);
 
@@ -35,7 +38,10 @@ Route::middleware(['auth:sanctum', 'activity.log'])->group(function () {
 
     Route::apiResource('categories', CategoryController::class);
     Route::put('/categories/{category}/budget', [CategoryController::class, 'setBudget']);
-    Route::apiResource('transactions', TransactionController::class);
+    Route::post('/receipts/scan', [ReceiptController::class, 'scan']);
+    Route::post('/transactions', [ReceiptController::class, 'store']);
+    Route::get('/transactions/{transaction}/attachment', [ReceiptController::class, 'show']);
+    Route::apiResource('transactions', TransactionController::class)->except(['store']);
     Route::get('/dashboard/summary', [DashboardController::class, 'summary']);
 
     Route::get('/reports/monthly', [ReportController::class, 'monthly']);
@@ -49,6 +55,9 @@ Route::middleware(['auth:sanctum', 'activity.log'])->group(function () {
         return $request->user();
     });
 });
+
+// Account deletion removes the actor before the activity logger can persist its entry.
+Route::middleware('auth:sanctum')->delete('/auth/me', [AuthController::class, 'destroyAccount']);
 
 // Tasks CRUD API
 Route::apiResource('tasks', TaskController::class);

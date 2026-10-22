@@ -119,6 +119,48 @@ Response 200:
 }
 ```
 
+
+### 1.5 Update profile
+- Method: `PATCH`
+- Endpoint: `/auth/me`
+- Header: `Authorization: Bearer <token>`
+- Body:
+```json
+{
+  "name": "Alice Tester",
+  "email": "alice@example.com"
+}
+```
+
+The email must be unique. Changing the email clears `email_verified_at`.
+
+### 1.6 Update password
+- Method: `PUT`
+- Endpoint: `/auth/password`
+- Header: `Authorization: Bearer <token>`
+- Body:
+```json
+{
+  "current_password": "CurrentPassword123!",
+  "password": "NewPassword123!",
+  "password_confirmation": "NewPassword123!"
+}
+```
+
+Updating the password revokes the user's other API tokens while keeping the current session active.
+
+### 1.7 Delete account
+- Method: `DELETE`
+- Endpoint: `/auth/me`
+- Header: `Authorization: Bearer <token>`
+- Body:
+```json
+{
+  "password": "CurrentPassword123!"
+}
+```
+
+Deleting an account revokes all of the user's API tokens and permanently deletes user-owned data through the configured database cascades.
 ---
 
 ## 2. Account API
@@ -600,3 +642,11 @@ curl -X POST http://localhost:8000/api/auth/login \
     "password": "Password123!"
   }'
 ```
+
+## Receipt scanning
+
+- `POST /api/receipts/scan` (Sanctum bearer token, multipart `receipt`): accepts JPEG, PNG, or WebP up to 10 MB, runs local Tesseract with `ind+eng`, stores a private temporary image, and returns `data.receipt_token` plus editable `data.extracted` suggestions. This endpoint never creates a transaction.
+- `POST /api/transactions` may include the `receipt_token` returned by the scan. The normal transaction fields are validated again and the image is attached as part of the confirmed transaction creation flow.
+- `GET /api/transactions/{transaction}/attachment` streams the private image only to its owning user.
+
+Install the `tesseract-ocr` and `tesseract-ocr-ind` system packages (both application Dockerfiles install them). Set `TESSERACT_BINARY` only when the executable is not available as `tesseract` on `PATH`. Receipt extraction is heuristic; users must verify each field before saving.

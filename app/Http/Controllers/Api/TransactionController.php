@@ -123,6 +123,11 @@ class TransactionController extends Controller
         ]);
     }
 
+    public function validatedForReceipt(Request $request): array
+    {
+        return $this->validateTransaction($request);
+    }
+
     private function validateTransaction(Request $request, ?Transaction $transaction = null): array
     {
         $updating = $transaction !== null;

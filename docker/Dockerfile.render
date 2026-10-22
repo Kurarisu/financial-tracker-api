@@ -14,6 +14,8 @@ FROM php:8.2-apache
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
     git \
+    tesseract-ocr \
+    tesseract-ocr-ind \
     libonig-dev \
     libpng-dev \
     libpq-dev \
